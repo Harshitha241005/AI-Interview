@@ -43,7 +43,7 @@ Sign up at [console.anthropic.com](https://console.anthropic.com) to get your fr
 ```bash
 npm start
 ```
-Visit `http://localhost:3000`
+Visit: [http://localhost:3000](http://localhost:3000)
 
 ---
 
