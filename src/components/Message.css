@@ -1,0 +1,127 @@
+.message-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  animation: fadeUp 0.3s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message-wrapper.candidate {
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.interviewer-avatar {
+  background: var(--bg-hover);
+  border: 2px solid;
+}
+
+.candidate-avatar {
+  background: var(--bg-hover);
+  border: 2px solid var(--border-bright);
+  color: var(--text-secondary);
+}
+
+.message-bubble {
+  max-width: 72%;
+  padding: 14px 18px;
+  border-radius: 14px;
+  line-height: 1.65;
+  position: relative;
+}
+
+.interviewer-bubble {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top-left-radius: 4px;
+}
+
+.candidate-bubble {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-bright);
+  border-top-right-radius: 4px;
+  text-align: right;
+}
+
+.message-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+}
+
+.message-text {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.message-text p {
+  margin-bottom: 8px;
+}
+
+.message-text p:last-child {
+  margin-bottom: 0;
+}
+
+.message-text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.message-text em {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  animation: bounce 1.2s ease infinite;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+.streaming-cursor {
+  display: inline-block;
+  color: var(--accent);
+  animation: blink 0.8s step-end infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}

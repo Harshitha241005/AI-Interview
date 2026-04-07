@@ -1,0 +1,467 @@
+==============================================================================
+  INTERVIEWAI — AI-ASSISTED CODING PROMPTS
+  Use these prompts with Claude, GPT-4, or any AI coding assistant
+  to build, modify, or extend each file in this project.
+==============================================================================
+
+------------------------------------------------------------------------------
+FILE: public/index.html
+------------------------------------------------------------------------------
+PROMPT:
+Create an HTML shell file for a React app called "InterviewAI". 
+Requirements:
+- Dark theme meta color: #0a0a0f
+- Import Google Fonts: Syne (weights 400,600,700,800), DM Mono (italic + regular, weights 300,400,500), and Instrument Serif (italic variant)
+- Meta description: "AI Interview Assistant - Practice interviews with AI"
+- Title: "InterviewAI — Ace Your Next Interview"
+- Standard React root div with id="root"
+- Include preconnect links for fonts.googleapis.com and fonts.gstatic.com
+Output: a clean index.html with no extra boilerplate.
+
+
+------------------------------------------------------------------------------
+FILE: src/styles/global.css
+------------------------------------------------------------------------------
+PROMPT:
+Create a global CSS file for a dark-themed React interview prep app.
+Requirements:
+- Define CSS custom properties (variables) for:
+  * Background layers: --bg-primary (#0a0a0f), --bg-secondary (#111118), --bg-card (#16161f), --bg-hover (#1e1e2a)
+  * Borders: --border (#2a2a3a), --border-bright (#3a3a52)
+  * Accent: --accent (#7c6af7 purple), --accent-dim, --accent-glow (rgba)
+  * Semantic colors: --accent-green (#4ade80), --accent-amber (#fbbf24), --accent-red (#f87171)
+  * Text: --text-primary (#f0f0f8), --text-secondary (#9090b0), --text-muted (#5a5a78)
+  * Fonts: --font-display (Syne), --font-mono (DM Mono), --font-serif (Instrument Serif)
+  * Radius, shadows
+- Global resets (box-sizing, margin, padding)
+- Body: dark bg, font-display, antialiasing
+- Custom scrollbar styling (thin, dark)
+- Text selection color using accent
+- Button and input inherit font-family
+Output: complete global.css with all variables and base resets.
+
+
+------------------------------------------------------------------------------
+FILE: src/utils/interviewData.js
+------------------------------------------------------------------------------
+PROMPT:
+Create a JavaScript data file that exports three arrays for an interview prep app:
+
+1. COMPANIES array — 12 companies including: Google, Meta, Amazon, Microsoft, Apple, Netflix, Early-Stage Startup, Goldman Sachs, McKinsey, OpenAI, Stripe, and a "General" fallback.
+Each company object should have: id, name, logo (emoji or abbreviation), color (hex brand color), description (short tagline), difficulty (Easy/Medium/Hard/Very Hard/Variable), traits (array of 4 bullet strings describing interview culture).
+
+2. INTERVIEW_TYPES array — 8 types: Technical Coding, System Design, Behavioral/HR, Case Interview, Product Management, Machine Learning, Finance/Quant, Leadership & Strategy.
+Each type: id, name, icon (emoji), description, duration (string), tags (array of 3).
+
+3. DIFFICULTY_LEVELS array — 3 levels: Warmup (easy), Standard (medium), Rigorous (hard).
+Each: id, name, description, color (hex).
+
+Output: a single .js file with three named exports.
+
+
+------------------------------------------------------------------------------
+FILE: src/utils/promptBuilder.js
+------------------------------------------------------------------------------
+PROMPT:
+Create a JavaScript utility file that builds system prompts for an AI interviewer.
+Export two functions:
+
+1. buildInterviewerSystemPrompt({ company, interviewType, difficulty, candidateName })
+   - Returns a detailed system prompt string
+   - Sets the AI as a senior interviewer at the given company
+   - Includes company-specific persona (writing style, cultural focus, tone) for at least 12 companies
+   - Includes interview-type-specific instructions (how to run a coding interview vs behavioral vs case, etc.) for 8 types
+   - Includes difficulty calibration (hint frequency, pushback level, pacing) for 3 levels
+   - Behavioral rules: stay in character, ask one question at a time, probe answers, give realistic reactions
+   - Ends with: at session end, provide a structured debrief
+
+2. buildFeedbackPrompt(conversationHistory)
+   - Returns a prompt asking the AI to generate a post-interview debrief
+   - Structured sections: Overall Impression, Technical Strengths, Areas to Improve, Standout Moments, Hire/No-Hire Signal (5 options), Top 3 Action Items
+
+Output: clean ES module with JSDoc comments.
+
+
+------------------------------------------------------------------------------
+FILE: src/hooks/useInterviewSession.js
+------------------------------------------------------------------------------
+PROMPT:
+Create a custom React hook called useInterviewSession for managing an AI interview session.
+Requirements:
+- State: messages (array), isLoading, error, sessionConfig, isSessionActive, isStreaming
+- startSession({ company, interviewType, difficulty, candidateName, apiKey }):
+  * Builds system prompt using buildInterviewerSystemPrompt
+  * Makes a POST to https://api.anthropic.com/v1/messages
+  * Headers: Content-Type, x-api-key, anthropic-version: 2023-06-01, anthropic-dangerous-direct-browser-access: true
+  * Model: claude-sonnet-4-20250514, max_tokens: 1024
+  * First user message: "I'm ready to begin the interview." (mark as hidden: true)
+  * Sets isSessionActive = true on success
+- sendMessage(userInput):
+  * Appends user message to messages state
+  * Uses streaming (stream: true) with SSE parsing
+  * Updates assistant message in real-time as chunks arrive (streaming: true flag on message)
+  * Uses AbortController for cancellation
+  * Full conversation history sent each turn
+- endSession(): aborts any ongoing stream, sets isSessionActive = false
+- resetSession(): clears all state back to initial
+Return all state and functions.
+Output: complete hook using useCallback, useRef, useState.
+
+
+------------------------------------------------------------------------------
+FILE: src/components/Message.jsx + Message.css
+------------------------------------------------------------------------------
+PROMPT:
+Create a React chat message component called Message.
+
+Props: message (object with role, content, streaming), companyColor (hex string)
+
+Requirements:
+- Two layouts: interviewer (left-aligned with avatar) and candidate (right-aligned with avatar)
+- Interviewer avatar: circular, border colored by companyColor, shows "I"
+- Candidate avatar: circular, neutral border, shows "U"
+- Message bubble: different background/border per role
+- Show "Interviewer" label above interviewer messages in accent color
+- Typing indicator (3 bouncing dots) when message is streaming but content is empty
+- Blinking cursor "▌" when streaming with content
+- Format message content: support **bold**, *italic*, \n paragraphs
+- Fade-up entrance animation on mount
+- Max width 72% for bubbles
+
+Also write the CSS in Message.css using CSS custom properties (--bg-card, --accent, etc.)
+No external libraries. Pure CSS animations.
+
+
+------------------------------------------------------------------------------
+FILE: src/components/FeedbackModal.jsx + FeedbackModal.css
+------------------------------------------------------------------------------
+PROMPT:
+Create a React modal component called FeedbackModal for post-interview debriefs.
+
+Props: messages (array), sessionConfig (object), onClose (fn), onStartNew (fn)
+
+Requirements:
+- Calls Anthropic API on mount to generate structured feedback
+- Uses buildFeedbackPrompt() from utils/promptBuilder.js
+- Sends full conversation transcript + feedback prompt to Claude
+- Shows loading spinner while waiting
+- Renders formatted markdown feedback (h3 headings, bullet lists, bold text)
+- Modal overlays the page with backdrop blur
+- Slides up from bottom on mobile, scales in on desktop
+- Header: "Interview Debrief" + company + type subtitle + close button
+- Footer: "Back to Session" (secondary) + "Start New Interview →" (primary accent button)
+- Error state with retry button
+
+Write both FeedbackModal.jsx and FeedbackModal.css.
+Use CSS custom properties for all colors. No external UI libraries.
+
+
+------------------------------------------------------------------------------
+FILE: src/pages/SetupPage.jsx + SetupPage.css
+------------------------------------------------------------------------------
+PROMPT:
+Create a React setup/configuration page for an interview prep app.
+
+Props: onStartInterview(config) callback
+
+Sections (numbered 01, 02, 03):
+1. Company selection — grid of clickable company cards showing logo, name, description, difficulty
+   - Cards use a --company-color CSS variable for selection highlight and glow
+   - Selected card shows colored border + subtle background tint
+
+2. Interview type selection — grid of type cards with emoji icon, name, description, tags, duration
+   - Selected card has accent-colored border
+
+3. Configuration:
+   - Difficulty level: 3 toggle buttons (Warmup/Standard/Rigorous) with color per level
+   - Candidate name: optional text input
+   - API key: password input with show/hide toggle, save to localStorage, link to console.anthropic.com
+
+After both company and type are selected: show a summary bar with pills showing selections + company trait chips
+
+Start button:
+- Disabled with helpful text if API key or selections are missing
+- Purple accent with glow when all fields are filled
+- Calls onStartInterview with { company, interviewType, difficulty, candidateName, apiKey }
+
+Write both SetupPage.jsx and SetupPage.css.
+Use CSS grid for layouts. Responsive for mobile.
+No external UI libraries or component frameworks.
+
+
+------------------------------------------------------------------------------
+FILE: src/pages/InterviewPage.jsx + InterviewPage.css
+------------------------------------------------------------------------------
+PROMPT:
+Create a React interview session page component.
+
+Props: messages, isLoading, isStreaming, sessionConfig, onSendMessage, onEndSession, onReset, error
+
+Requirements:
+
+HEADER (sticky top):
+- Left: "← New Session" button (resets to setup), session info pills (company name in company color, interview type, difficulty)
+- Right: live timer (mm:ss format, red pulsing dot), "End & Get Feedback" button (red border)
+
+MESSAGES AREA (scrollable flex-1):
+- Renders Message components for all non-hidden messages
+- Auto-scrolls to bottom on new messages using useRef
+- Loading placeholder (bouncing dots + text) when no messages yet
+
+INPUT AREA (sticky bottom):
+- Textarea (3 rows, Enter to send, Shift+Enter for newline)
+- "Press Enter to send" hint + Send button (active = accent purple, inactive = muted)
+- Quick action buttons row: "🔁 Repeat question", "🤔 Give me a moment", "💡 Hint please", "✅ Next question" (each triggers onSendMessage with preset text)
+
+ERROR BANNER: shows red error message at top if error prop exists
+
+When "End & Get Feedback" is clicked: calls onEndSession then shows <FeedbackModal>
+
+Include session timer using setInterval in useEffect.
+
+Write both InterviewPage.jsx and InterviewPage.css.
+Full responsive mobile support. CSS custom properties only.
+
+
+------------------------------------------------------------------------------
+FILE: src/App.js
+------------------------------------------------------------------------------
+PROMPT:
+Create the root App component for the InterviewAI React app.
+
+Requirements:
+- Import and use the useInterviewSession custom hook
+- Conditional rendering:
+  * If isSessionActive OR messages.length > 0: render <InterviewPage> with all session props
+  * Otherwise: render <SetupPage> with onStartInterview={startSession}
+- Import global.css
+- Pass the following to InterviewPage:
+  messages, isLoading, isStreaming, sessionConfig, 
+  onSendMessage={sendMessage}, onEndSession={endSession}, 
+  onReset={resetSession}, error
+- No React Router needed — single page with conditional view
+
+Output: clean, minimal App.js with default export.
+
+
+------------------------------------------------------------------------------
+FILE: src/index.js
+------------------------------------------------------------------------------
+PROMPT:
+Create the standard React 18 entry point file.
+- Import React and ReactDOM
+- Import App component
+- Use ReactDOM.createRoot to render <App /> inside <React.StrictMode>
+- Target element: document.getElementById("root")
+Output: minimal index.js, 8 lines or fewer.
+
+
+------------------------------------------------------------------------------
+FILE: package.json
+------------------------------------------------------------------------------
+PROMPT:
+Create a package.json for a React app called "ai-interview-assistant".
+Dependencies:
+- react: ^18.2.0
+- react-dom: ^18.2.0
+- react-scripts: 5.0.1
+No TypeScript. No testing frameworks other than what react-scripts includes.
+Include standard CRA scripts: start, build, test, eject.
+Include browserslist for production and development.
+Output: valid package.json.
+
+
+==============================================================================
+  EXTENSION PROMPTS — Use these to add features to the base project
+==============================================================================
+
+------------------------------------------------------------------------------
+FEATURE: Add a session history/replay feature
+------------------------------------------------------------------------------
+PROMPT:
+Add a session history feature to InterviewAI.
+
+Requirements:
+- After each interview, save the session to localStorage with key "interview_sessions"
+- Each saved session: { id, date, company, interviewType, difficulty, messages, feedback }
+- Create a new component HistoryPage.jsx that lists past sessions
+- Each session card shows: company logo, interview type, date, message count
+- Clicking a session replays the conversation in read-only mode
+- Add a "History" link in the SetupPage header
+- Limit history to 20 sessions (drop oldest)
+
+Create HistoryPage.jsx, HistoryPage.css, and show changes needed in App.js.
+
+
+------------------------------------------------------------------------------
+FEATURE: Add a notes/scratchpad panel
+------------------------------------------------------------------------------
+PROMPT:
+Add a collapsible scratchpad panel to the InterviewPage.
+
+Requirements:
+- A toggle button in the header: "📝 Notes"
+- Slides in from the right as a side panel (300px wide on desktop)
+- Contains a plain textarea for the user to write notes during the interview
+- On mobile: covers the screen as a drawer
+- Notes are saved to localStorage per session
+- Panel can be dismissed without losing notes
+- Keyboard shortcut: Cmd/Ctrl + Shift + N to toggle
+
+Create the Scratchpad component and CSS. Show the changes needed in InterviewPage.jsx.
+
+
+------------------------------------------------------------------------------
+FEATURE: Add speech-to-text input
+------------------------------------------------------------------------------
+PROMPT:
+Add a voice input button to the InterviewPage input area.
+
+Requirements:
+- Use the browser's Web Speech API (SpeechRecognition)
+- Add a microphone button next to the send button
+- While recording: button pulses red, shows "Listening..."
+- On result: transcript is appended to the textarea
+- On error (not supported or denied): show a small tooltip "Voice input not available"
+- Works alongside manual typing (does not replace text, appends)
+- Add a visual waveform animation while listening (CSS-only, 5 vertical bars)
+
+Show only the changes needed to InterviewPage.jsx and InterviewPage.css.
+No external libraries — native Web Speech API only.
+
+
+------------------------------------------------------------------------------
+FEATURE: Add a timer warning system
+------------------------------------------------------------------------------
+PROMPT:
+Enhance the session timer in InterviewPage with time warnings.
+
+Requirements:
+- At 30 minutes: timer turns amber (#fbbf24), show a subtle top banner "30 min elapsed — wrapping up soon?"
+- At 45 minutes: timer turns red, banner changes to "45 min — consider wrapping up"
+- At 60 minutes: pulsing red border around the entire chat window
+- Banners are dismissible (× button)
+- Warnings match realistic interview durations
+
+Show the changes needed in InterviewPage.jsx and InterviewPage.css only.
+
+
+------------------------------------------------------------------------------
+FEATURE: Add company-specific interview tips sidebar
+------------------------------------------------------------------------------
+PROMPT:
+Add a pre-interview tips panel that shows before the interview starts.
+
+After the user clicks "Begin Interview" on SetupPage, show a full-screen interstitial for 5-10 seconds (skippable) that displays:
+- Company name + logo
+- "Before you begin" heading
+- 5-6 company-specific tips (sourced from the traits in interviewData.js + additional ones)
+- Interview type-specific tips (e.g., "For System Design: clarify scale requirements first")
+- A "I'm Ready" button to proceed and a countdown skip timer
+
+Create TipsScreen.jsx and TipsScreen.css.
+Update App.js to show this between SetupPage and InterviewPage.
+
+
+------------------------------------------------------------------------------
+FEATURE: Export interview transcript as PDF
+------------------------------------------------------------------------------
+PROMPT:
+Add a "Download Transcript" button to the FeedbackModal.
+
+Requirements:
+- Uses the browser's print API (window.print()) with a custom print stylesheet
+- Creates a formatted print view: company header, date, messages formatted as a dialogue
+- Interviewer messages on left with "[Interviewer]" label, candidate on right with "[You]"
+- Feedback section appended at the end
+- Print stylesheet hides all UI chrome, uses black text on white
+- Filename suggestion: "interview-[company]-[date].pdf"
+
+No external PDF library. Use CSS @media print only.
+Show changes needed in FeedbackModal.jsx and add a new print.css file.
+
+
+------------------------------------------------------------------------------
+FEATURE: Add difficulty auto-adjustment
+------------------------------------------------------------------------------
+PROMPT:
+Add an adaptive difficulty system to useInterviewSession.
+
+Requirements:
+- Track a "performance score" (0-100) that updates after each exchange
+- Heuristics: response length, use of technical terms, structured answers (STAR format detection)
+- If score drops below 40 after 3 exchanges: automatically soften the difficulty in the system prompt
+- If score stays above 75 after 3 exchanges: increase difficulty one notch
+- Show a subtle indicator in the header: "Difficulty: Auto-adjusting"
+- Add a performanceScore to the session state
+- The adjustment changes the system prompt injected in future messages (not a re-start)
+
+Show changes to useInterviewSession.js and InterviewPage.jsx.
+
+
+==============================================================================
+  DEBUGGING PROMPTS — Use when something breaks
+==============================================================================
+
+------------------------------------------------------------------------------
+DEBUG: Streaming not working
+------------------------------------------------------------------------------
+PROMPT:
+My Claude API streaming in useInterviewSession.js is not displaying text in real-time.
+The response only appears all at once after completion.
+
+Here is my streaming implementation: [paste your sendMessage function]
+
+Issues to check:
+1. SSE parsing — am I correctly splitting on "data: " prefix and parsing JSON?
+2. State update batching — React may be batching setMessages calls
+3. The streaming: true flag on the placeholder message object
+4. The content_block_delta event type check
+
+Please fix the streaming implementation and explain what was wrong.
+
+
+------------------------------------------------------------------------------
+DEBUG: CORS error on Anthropic API from browser
+------------------------------------------------------------------------------
+PROMPT:
+I'm getting a CORS error when calling the Anthropic API directly from my React app in the browser.
+Error: "Access-Control-Allow-Origin" header missing.
+
+My fetch call: [paste your fetch call]
+
+Fix: I need to add the "anthropic-dangerous-direct-browser-access": "true" header.
+Please update my fetch call to include this header and explain why it's needed.
+Also confirm all required headers: Content-Type, x-api-key, anthropic-version, anthropic-dangerous-direct-browser-access.
+
+
+------------------------------------------------------------------------------
+DEBUG: Messages not scrolling to bottom
+------------------------------------------------------------------------------
+PROMPT:
+My chat messages container is not auto-scrolling to the bottom when new messages arrive.
+Here is my component: [paste InterviewPage.jsx]
+
+Fix the auto-scroll using useRef and useEffect.
+The messagesEndRef should be a div at the end of the messages list.
+The useEffect should depend on the messages array and call scrollIntoView({ behavior: "smooth" }).
+Make sure it also triggers during streaming updates.
+
+
+------------------------------------------------------------------------------
+DEBUG: API key not persisting between page refreshes
+------------------------------------------------------------------------------
+PROMPT:
+My API key input is not persisting between browser refreshes.
+Here is my current handleApiKeyChange: [paste the function]
+
+Fix it to:
+1. Save to localStorage with key "interview_api_key" when value changes
+2. Load from localStorage with useState initial value: localStorage.getItem("interview_api_key") || ""
+3. Clear from localStorage if the input is emptied
+Also add a "Clear saved key" button next to the input.
+
+
+==============================================================================
+END OF PROMPTS FILE
+==============================================================================
