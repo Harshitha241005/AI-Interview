@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ◈ InterviewAI — AI-Powered Interview Practice
 
 A full-featured interview preparation app powered by Claude (Anthropic). Practice with a realistic AI interviewer that adapts to your target company and interview type.
@@ -128,3 +129,6 @@ In `src/hooks/useInterviewSession.js`, update the `model` field in both API call
 
 ## License
 MIT
+=======
+# AI-Interview
+>>>>>>> c386335964aae228eb3e1e857b9fedc4f5908b2c
